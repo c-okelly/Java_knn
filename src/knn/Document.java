@@ -15,6 +15,7 @@ public class Document {
     // Varailbes
     int docID;
     int noColumns;
+    String label = null;
     private Hashtable<Integer, Integer> freqTables = new Hashtable<Integer, Integer>();
 
     // Constructor
@@ -26,6 +27,9 @@ public class Document {
 
     public int getID(){
         return docID;
+    }
+    public void setLabel(String newLabel){
+        label = newLabel;
     }
     public void updateFreqTableInput(int columnID, int frequency){
         freqTables.put(columnID, frequency);
@@ -41,8 +45,11 @@ public class Document {
 
         return freq;
     }
+    public Hashtable<Integer, Integer> getHashtable(){
+        return freqTables;
+    }
 
     public String toString(){
-        return "Document object of id "+docID+ ". \n Current hashtable "+freqTables.toString();
+        return "Document object of id "+docID+ " and class label "+ label +". \n Current hashtable "+freqTables.toString();
     }
 }
