@@ -13,9 +13,33 @@ public class Knn{
 
         // Create document array
         Knn ob = new Knn("../news_data/news_articles.mtx","../news_data/news_articles.labels");
-        Document a = ob.documentsArray[0];
-        Document b = ob.documentsArray[1];
-        ob.calculateCosineDistance(a, b);
+        // Test distance calculator
+        Document testDoc = ob.documentsArray[150];
+        ob.documentsArray[10] = null;
+        long startTime = System.currentTimeMillis();
+
+        Map nearest = ob.findWeightedNearestNeighbours(testDoc, ob.documentsArray, 10);
+        System.out.println(nearest);
+
+        System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
+    }
+
+    // Inner class to store measuremet of doc distances
+    class MeasuredDoc implements Comparable<MeasuredDoc>{
+        Document doc;
+        Double distance;
+
+        MeasuredDoc(Document inputDoc,Double dis){
+            doc = inputDoc;
+            distance = dis;
+        }
+        public String toString(){
+            return "Document id " + doc.getID() + " distance " + distance;
+        }
+        @Override
+        public int compareTo(MeasuredDoc o){
+            return distance.compareTo(o.distance);
+        }
     }
 
     // Variables
@@ -122,8 +146,13 @@ public class Knn{
 
     // Knn methods
 
-    public void calculateCosineDistance(Document doc1, Document doc2){
+    public double calculateCosineDistance(Document doc1, Document doc2){
 
+
+        // If one of docuemnts is null return 0
+        if (doc1==null || doc2==null){
+            return -1;
+        }
         Hashtable<Integer, Integer> doc1Hashtable = doc1.getHashtable();
         Hashtable<Integer, Integer> doc2Hashtable = doc2.getHashtable();
 
@@ -133,23 +162,102 @@ public class Knn{
         HashSet<Integer> set2 = new HashSet<Integer>(doc2Hashtable.keySet());
         // Intersect of both set
         inter.retainAll(set2);
-        // Only unique keys in set 1 and 2
-        set1.removeAll(inter);
-        set2.removeAll(inter);
 
         // Numerator of cosine - Only looking at intersection a (x * 0) = 0
         float numTot = 0;
-        for (Integer columnID : inter){
-            System.out.println(columnID);
+        for (Integer colmID : inter){
+            numTot += (doc1.getFreqOfColumn(colmID)* doc2.getFreqOfColumn(colmID));
         }
 
         // Denominaotr of the cosine
+        double d1Tot = 0;
+        double d2Tot = 0;
+
+        double preSqrtD1 = 0;
+        double preSqrtD2 = 0;
+
+        //
+        for (Integer colmID : set1) {
+            int itemFreq = doc1.getFreqOfColumn(colmID);
+            preSqrtD1 += (itemFreq * itemFreq);
+        }
+        for (Integer colmID : set2) {
+            int itemFreq = doc2.getFreqOfColumn(colmID);
+            preSqrtD2 += (itemFreq * itemFreq);
+        }
+
+        d1Tot = Math.sqrt(preSqrtD1);
+        d2Tot = Math.sqrt(preSqrtD2);
+
+        double domTotal = d1Tot * d2Tot;
+        double distance = numTot / domTotal;
+
+        return distance;
+    }
+
+    public Map<String,Integer> findNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
+
+        MeasuredDoc[] closeNeigh = measureDistance(testDoc, trainingDocs, noNeighbours);
+
+        // Calculate class based on neighbours - flexible for multi class soltuion
+
+        Map<String,Integer> classCount = new HashMap<String,Integer>();
+
+        for (int i =0; i <closeNeigh.length; i++) {
+            // System.out.println(closeNeigh[i].doc.getLabel());
+            if (classCount.get(closeNeigh[i].doc.getLabel())== null){
+                classCount.put(closeNeigh[i].doc.getLabel(),1);
+            }else{
+                classCount.put(closeNeigh[i].doc.getLabel(),classCount.get(closeNeigh[i].doc.getLabel())+1);
+            }
+        }
+
+        return classCount;
 
     }
-    public void findNearestNeighbours(){
-    }
-    public void findWeightedNearestNeighbours(){
+
+    public Map<String,Double> findWeightedNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
+
+        MeasuredDoc[] closeNeigh = measureDistance(testDoc, trainingDocs, noNeighbours);
+
+        // Calculate class based on neighbours - flexible for multi class soltuion
+
+        Map<String,Double> classCount = new HashMap<String,Double>();
+
+        for (int i =0; i <closeNeigh.length; i++) {
+            // System.out.println(closeNeigh[i].doc.getLabel());
+            if (classCount.get(closeNeigh[i].doc.getLabel())== null){
+                classCount.put(closeNeigh[i].doc.getLabel(),(1/closeNeigh[i].distance));
+            }else{
+                classCount.put(closeNeigh[i].doc.getLabel(),classCount.get(closeNeigh[i].doc.getLabel())+(1/closeNeigh[i].distance));
+            }
+        }
+
+        return classCount;
+
 
     }
-    
+    private MeasuredDoc[] measureDistance(Document testDoc, Document[] trainingDocs, Integer noNeighbours){
+        // Interate through docs in given strucutre and store reults in MeasuredDoc object
+        MeasuredDoc[] nearestNeigh = new MeasuredDoc[documentsArray.length];
+
+        int i =0;
+        for (Document trainedDoc : trainingDocs){
+            double dist = calculateCosineDistance(testDoc, trainedDoc);
+            // System.out.printf("Testing dis agaisnt %d distance = %f \n", i, dist);
+
+            MeasuredDoc mes = new MeasuredDoc(trainedDoc, dist);
+            nearestNeigh[i] = mes;
+            i++;
+        }
+        // Create sorted array of documents that are nearest.
+        Arrays.sort(nearestNeigh,Collections.reverseOrder());
+        // System.out.println(Arrays.toString(nearestNeigh));
+
+        return Arrays.copyOfRange(nearestNeigh,0,noNeighbours);
+    }
+
+    public void measureAccuracy(){
+        
+    }
 }

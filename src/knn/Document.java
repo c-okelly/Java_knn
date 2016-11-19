@@ -31,6 +31,9 @@ public class Document {
     public void setLabel(String newLabel){
         label = newLabel;
     }
+    public String getLabel(){
+        return label;
+    }
     public void updateFreqTableInput(int columnID, int frequency){
         freqTables.put(columnID, frequency);
     }
@@ -50,6 +53,6 @@ public class Document {
     }
 
     public String toString(){
-        return "Document object of id "+docID+ " and class label "+ label +". \n Current hashtable "+freqTables.toString();
+        return "Document object of id "+docID+ " and class label "+ label;
     }
 }
