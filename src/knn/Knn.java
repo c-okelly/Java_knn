@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.util.*;
 
 
+
 public class Knn{
 
     public static void main(String[] args) {
@@ -14,12 +15,12 @@ public class Knn{
         // Create document array
         Knn ob = new Knn("../news_data/news_articles.mtx","../news_data/news_articles.labels");
         // Test distance calculator
-        Document testDoc = ob.documentsArray[150];
-        ob.documentsArray[10] = null;
+        Document testDoc = ob.documentsArray[10];
+        // ob.documentsArray[10] = null;
         long startTime = System.currentTimeMillis();
 
-        Map nearest = ob.findWeightedNearestNeighbours(testDoc, ob.documentsArray, 10);
-        System.out.println(nearest);
+        String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
+        System.out.println("Final -" + nearest);
 
         System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
     }
@@ -195,7 +196,7 @@ public class Knn{
         return distance;
     }
 
-    public Map<String,Integer> findNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
+    public String findNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
 
         MeasuredDoc[] closeNeigh = measureDistance(testDoc, trainingDocs, noNeighbours);
 
@@ -211,12 +212,33 @@ public class Knn{
                 classCount.put(closeNeigh[i].doc.getLabel(),classCount.get(closeNeigh[i].doc.getLabel())+1);
             }
         }
+        // Predict class by finding neigbhours with highest coutn
+        String predictedClass = "None";
+        int highestNo = 0;
+        for (String key: classCount.keySet()){
+            if (highestNo == 0 || highestNo < classCount.get(key)){
+                predictedClass = key;
+                highestNo = classCount.get(key);
+            }
+        }
+        // Check for tie - if exisits run againt and look for one less neighbour
+        int maxValueCount =0;
+        for (String key: classCount.keySet()){
+            if (classCount.get(key) == highestNo){
+                maxValueCount += 1;
+            }
+        }
+        // System.out.println(maxValueCount + predictedClass);
+        if (maxValueCount > 1 && noNeighbours > 1){
+            predictedClass = findNearestNeighbours(testDoc, trainingDocs, noNeighbours-1);
+        }
 
-        return classCount;
+
+        return predictedClass;
 
     }
 
-    public Map<String,Double> findWeightedNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
+    public String findWeightedNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
 
         MeasuredDoc[] closeNeigh = measureDistance(testDoc, trainingDocs, noNeighbours);
 
@@ -233,7 +255,17 @@ public class Knn{
             }
         }
 
-        return classCount;
+        // Predict class by finding neigbhours with highest coutn
+        String predictedClass = "None";
+        double highestNo = 0;
+        for (String key: classCount.keySet()){
+            if (highestNo == 0 || highestNo < classCount.get(key)){
+                predictedClass = key;
+                highestNo = classCount.get(key);
+            }
+        }
+
+        return predictedClass;
 
 
     }
@@ -257,7 +289,13 @@ public class Knn{
         return Arrays.copyOfRange(nearestNeigh,0,noNeighbours);
     }
 
-    public void measureAccuracy(){
-        
-    }
+    // public void measureAccuracy(Document[] testSet){
+    //     // Implementation of leave one out cross validation.
+
+    //     Document tester = testSet[0];
+
+    //     for (Document doc : testSet){
+    //     }
+
+    // }
 }
