@@ -15,12 +15,12 @@ public class Knn{
         // Create document array
         Knn ob = new Knn("../news_data/news_articles.mtx","../news_data/news_articles.labels");
         // Test distance calculator
-        Document testDoc = ob.documentsArray[10];
-        ob.documentsArray[10] = null;
+        Document testDoc = ob.documentsArray[1];
+        // ob.documentsArray[10] = null;
         long startTime = System.currentTimeMillis();
 
-        ob.measureAccuracy(ob.documentsArray);
-        // String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
+        // ob.measureAccuracy(ob.documentsArray);
+        String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
         // System.out.println("Final -" + nearest);
         System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
     }
@@ -270,6 +270,7 @@ public class Knn{
 
     }
     private MeasuredDoc[] measureDistance(Document testDoc, Document[] trainingDocs, Integer noNeighbours){
+                
         // Interate through docs in given strucutre and store reults in MeasuredDoc object
         MeasuredDoc[] nearestNeigh = new MeasuredDoc[documentsArray.length];
 
@@ -293,11 +294,11 @@ public class Knn{
         // Implementation of leave one out cross validation.
         int k = 3;
 
-        Document testDoc null;
-        Document tempRemoved = null;
+        Document testDoc = null;
 
         int correctCount = 0;
         int incorectCount = 0;
+        int nullC = 0;
 
         for (int y=0; y < testSet.length; y++){
             if (y >0){
@@ -307,10 +308,20 @@ public class Knn{
             testSet[y] = null;
 
             System.out.println(testDoc);
-
+            String predClass = findNearestNeighbours(testDoc, testSet, k);
+            if (predClass == null){
+                nullC +=1;
+            }
+            else if (predClass.equals(testDoc.getLabel())){
+                correctCount += 1;
+            } else {
+                incorectCount += 1;
+            }
         }
-
-        System.out.printf("Correct %d and inccorect is %d /n", correctCount, incorectCount);
+        int total = correctCount + incorectCount;
+        double correctClass = correctCount / total;
+        System.out.printf("Correct %d and inccorect is %d null is /n", correctCount, incorectCount, nullC);
+        System.out.printf("%d Total",total, correctClass);
 
     }
 }
