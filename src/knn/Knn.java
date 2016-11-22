@@ -16,12 +16,12 @@ public class Knn{
         Knn ob = new Knn("../news_data/news_articles.mtx","../news_data/news_articles.labels");
         // Test distance calculator
         Document testDoc = ob.documentsArray[10];
-        // ob.documentsArray[10] = null;
+        ob.documentsArray[10] = null;
         long startTime = System.currentTimeMillis();
 
-        String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
-        System.out.println("Final -" + nearest);
-
+        ob.measureAccuracy(ob.documentsArray);
+        // String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
+        // System.out.println("Final -" + nearest);
         System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
     }
 
@@ -233,7 +233,7 @@ public class Knn{
             predictedClass = findNearestNeighbours(testDoc, trainingDocs, noNeighbours-1);
         }
 
-
+        // System.out.println(classCount);
         return predictedClass;
 
     }
@@ -289,13 +289,28 @@ public class Knn{
         return Arrays.copyOfRange(nearestNeigh,0,noNeighbours);
     }
 
-    // public void measureAccuracy(Document[] testSet){
-    //     // Implementation of leave one out cross validation.
+    public void measureAccuracy(Document[] testSet){
+        // Implementation of leave one out cross validation.
+        int k = 3;
 
-    //     Document tester = testSet[0];
+        Document testDoc null;
+        Document tempRemoved = null;
 
-    //     for (Document doc : testSet){
-    //     }
+        int correctCount = 0;
+        int incorectCount = 0;
 
-    // }
+        for (int y=0; y < testSet.length; y++){
+            if (y >0){
+                testSet[y-1] = testDoc;
+            }
+            testDoc = testSet[y];
+            testSet[y] = null;
+
+            System.out.println(testDoc);
+
+        }
+
+        System.out.printf("Correct %d and inccorect is %d /n", correctCount, incorectCount);
+
+    }
 }
