@@ -122,6 +122,11 @@ public class Knn{
             doc.updateFreqTableInput(columndID, wordFreq);
 
         }
+
+        // Calculate vector norms for each documents
+        for (Document doc : documentsArray){
+            doc.preCalcVectorNorms();
+        }
     }
     // General methods
 
@@ -158,11 +163,11 @@ public class Knn{
         Hashtable<Integer, Integer> doc2Hashtable = doc2.getHashtable();
 
         // Denominaotr of the cosine
-        double d1Tot = 0;
-        double d2Tot = 0;
+        // double d1Tot = 0;
+        // double d2Tot = 0;
 
-        double preSqrtD1 = 0;
-        double preSqrtD2 = 0;
+        // double preSqrtD1 = 0;
+        // double preSqrtD2 = 0;
 
         // Numerator of cosine - Only looking at intersection a (x * 0) = 0
         float numTot = 0;
@@ -177,17 +182,17 @@ public class Knn{
 
 
 
-        for (Integer value : doc1Hashtable.values()) {
-            preSqrtD1 += (Math.pow(value,2));
-        }
-        for (int value : doc2Hashtable.values()) {
-            preSqrtD2 += (Math.pow(value,2));
-        }
+        // for (Integer value : doc1Hashtable.values()) {
+        //     preSqrtD1 += (Math.pow(value,2));
+        // }
+        // for (int value : doc2Hashtable.values()) {
+            // preSqrtD2 += (Math.pow(value,2));
+        // }
 
-        d1Tot = Math.sqrt(preSqrtD1);
-        d2Tot = Math.sqrt(preSqrtD2);
+        // d1Tot = Math.sqrt(preSqrtD1);
+        // d2Tot = Math.sqrt(preSqrtD2);
 
-        double domTotal = d1Tot * d2Tot;
+        double domTotal = doc1.vectorNorm * doc2.vectorNorm;
         double distance = numTot / domTotal;
 
         return distance;
@@ -293,7 +298,7 @@ public class Knn{
         // Implementation of leave one out cross validation for weighted.
 
         // Unweighted cross validation
-        System.out.println("Accuracy testing for unweighted Knn using leave one out cross validation for k 1 - 10");
+        System.out.println("\n Accuracy testing for unweighted Knn using leave one out cross validation for k 1 - 10");
         for (int k =1;k<=10;k++){
             Document testDoc = null;
 
@@ -321,13 +326,13 @@ public class Knn{
             }
 
             double total = correctCount + incorectCount;
-            double perCorrect = correctCount / (double)total;
+            double perCorrect = (correctCount / (double)total) * 100;
 
             System.out.printf("Using %d neighbor(s) accuracy level is  %f %% \n", k, perCorrect);
         }
 
         // Weighted cross validation
-        System.out.println("Accuracy testing for weighted Knn using leave one out cross validation for k 1 - 10");
+        System.out.println("\n Accuracy testing for weighted Knn using leave one out cross validation for k 1 - 10");
         for (int k =1;k<=10;k++){
             Document testDoc = null;
 
@@ -355,7 +360,7 @@ public class Knn{
             }
 
             double total = correctCount + incorectCount;
-            double perCorrect = correctCount / (double)total;
+            double perCorrect = (correctCount / (double)total) * 100;
 
             System.out.printf("Using %d neighbor(s) accuracy level is  %f %% \n", k, perCorrect);
         }

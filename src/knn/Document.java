@@ -17,6 +17,7 @@ public class Document {
     int noColumns;
     String label = null;
     private Hashtable<Integer, Integer> freqTables = new Hashtable<Integer, Integer>();
+    double vectorNorm = 0;
 
     // Constructor
     public Document(int documentNumber, int numberOfColumns){
@@ -54,5 +55,12 @@ public class Document {
 
     public String toString(){
         return "Document object of id "+docID+ " and class label "+ label;
+    }
+    public void preCalcVectorNorms(){
+        double preSqrt = 0;
+        for (Integer value : freqTables.values()) {
+            preSqrt += (Math.pow(value,2));
+        }
+        vectorNorm = Math.sqrt(preSqrt);
     }
 }
