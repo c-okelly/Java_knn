@@ -43,7 +43,7 @@ public class Document {
         if (freqTables.containsKey(columnID)) {
             freq = freqTables.get(columnID);
         } else {
-            freq = -1;
+            freq = 0;
         }
 
         return freq;

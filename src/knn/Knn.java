@@ -19,8 +19,8 @@ public class Knn{
         // ob.documentsArray[10] = null;
         long startTime = System.currentTimeMillis();
 
-        // ob.measureAccuracy(ob.documentsArray);
-        String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
+        ob.measureAccuracy(ob.documentsArray);
+        // String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
         // System.out.println("Final -" + nearest);
         System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
     }
@@ -157,19 +157,6 @@ public class Knn{
         Hashtable<Integer, Integer> doc1Hashtable = doc1.getHashtable();
         Hashtable<Integer, Integer> doc2Hashtable = doc2.getHashtable();
 
-        // Create new sets
-        HashSet<Integer> inter = new HashSet<Integer>(doc1Hashtable.keySet());
-        HashSet<Integer> set1 = new HashSet<Integer>(doc1Hashtable.keySet());
-        HashSet<Integer> set2 = new HashSet<Integer>(doc2Hashtable.keySet());
-        // Intersect of both set
-        inter.retainAll(set2);
-
-        // Numerator of cosine - Only looking at intersection a (x * 0) = 0
-        float numTot = 0;
-        for (Integer colmID : inter){
-            numTot += (doc1.getFreqOfColumn(colmID)* doc2.getFreqOfColumn(colmID));
-        }
-
         // Denominaotr of the cosine
         double d1Tot = 0;
         double d2Tot = 0;
@@ -177,14 +164,24 @@ public class Knn{
         double preSqrtD1 = 0;
         double preSqrtD2 = 0;
 
-        //
-        for (Integer colmID : set1) {
-            int itemFreq = doc1.getFreqOfColumn(colmID);
-            preSqrtD1 += (itemFreq * itemFreq);
+        // Numerator of cosine - Only looking at intersection a (x * 0) = 0
+        float numTot = 0;
+        for (int colmID : doc1Hashtable.keySet()){
+            int a,b;
+            if (doc2Hashtable.containsKey(colmID)){
+                    a = doc1Hashtable.get(colmID);
+                    b = doc2Hashtable.get(colmID);
+                    numTot += (a*b);
+                }
         }
-        for (Integer colmID : set2) {
-            int itemFreq = doc2.getFreqOfColumn(colmID);
-            preSqrtD2 += (itemFreq * itemFreq);
+
+
+
+        for (Integer value : doc1Hashtable.values()) {
+            preSqrtD1 += (Math.pow(value,2));
+        }
+        for (int value : doc2Hashtable.values()) {
+            preSqrtD2 += (Math.pow(value,2));
         }
 
         d1Tot = Math.sqrt(preSqrtD1);
@@ -199,9 +196,9 @@ public class Knn{
     public String findNearestNeighbours(Document testDoc, Document[] trainingDocs, Integer noNeighbours ){
 
         MeasuredDoc[] closeNeigh = measureDistance(testDoc, trainingDocs, noNeighbours);
+        // Return 10 
 
         // Calculate class based on neighbours - flexible for multi class soltuion
-
         Map<String,Integer> classCount = new HashMap<String,Integer>();
 
         for (int i =0; i <closeNeigh.length; i++) {
@@ -221,6 +218,7 @@ public class Knn{
                 highestNo = classCount.get(key);
             }
         }
+        // System.out.println(classCount.toString());
         // Check for tie - if exisits run againt and look for one less neighbour
         int maxValueCount =0;
         for (String key: classCount.keySet()){
@@ -270,16 +268,17 @@ public class Knn{
 
     }
     private MeasuredDoc[] measureDistance(Document testDoc, Document[] trainingDocs, Integer noNeighbours){
-                
+
         // Interate through docs in given strucutre and store reults in MeasuredDoc object
         MeasuredDoc[] nearestNeigh = new MeasuredDoc[documentsArray.length];
 
         int i =0;
+        MeasuredDoc mes;
         for (Document trainedDoc : trainingDocs){
             double dist = calculateCosineDistance(testDoc, trainedDoc);
             // System.out.printf("Testing dis agaisnt %d distance = %f \n", i, dist);
 
-            MeasuredDoc mes = new MeasuredDoc(trainedDoc, dist);
+            mes = new MeasuredDoc(trainedDoc, dist);
             nearestNeigh[i] = mes;
             i++;
         }
@@ -291,37 +290,74 @@ public class Knn{
     }
 
     public void measureAccuracy(Document[] testSet){
-        // Implementation of leave one out cross validation.
-        int k = 3;
+        // Implementation of leave one out cross validation for weighted.
 
-        Document testDoc = null;
+        // Unweighted cross validation
+        System.out.println("Accuracy testing for unweighted Knn using leave one out cross validation for k 1 - 10");
+        for (int k =1;k<=10;k++){
+            Document testDoc = null;
 
-        int correctCount = 0;
-        int incorectCount = 0;
-        int nullC = 0;
+            int correctCount = 0;
+            int incorectCount = 0;
 
-        for (int y=0; y < testSet.length; y++){
-            if (y >0){
-                testSet[y-1] = testDoc;
+            for (int y=0; y < testSet.length; y++){
+                testDoc = testSet[y];
+                // Remove test doc from set
+                testSet[y] = null;
+
+                String predClass = findWeightedNearestNeighbours(testDoc, testSet, k);
+                // System.out.println(testDoc);
+                // System.out.println(predClass);
+                // if (predClass == null){
+                //     nullC +=1;
+                // }
+               if (predClass.equals(testDoc.getLabel())){
+                    correctCount += 1;
+                } else {
+                    incorectCount += 1;
+               }
+               // Add document back into testSet
+               testSet[y] = testDoc;
             }
-            testDoc = testSet[y];
-            testSet[y] = null;
 
-            System.out.println(testDoc);
-            String predClass = findNearestNeighbours(testDoc, testSet, k);
-            if (predClass == null){
-                nullC +=1;
-            }
-            else if (predClass.equals(testDoc.getLabel())){
-                correctCount += 1;
-            } else {
-                incorectCount += 1;
-            }
+            double total = correctCount + incorectCount;
+            double perCorrect = correctCount / (double)total;
+
+            System.out.printf("Using %d neighbor(s) accuracy level is  %f %% \n", k, perCorrect);
         }
-        int total = correctCount + incorectCount;
-        double correctClass = correctCount / total;
-        System.out.printf("Correct %d and inccorect is %d null is /n", correctCount, incorectCount, nullC);
-        System.out.printf("%d Total",total, correctClass);
 
+        // Weighted cross validation
+        System.out.println("Accuracy testing for weighted Knn using leave one out cross validation for k 1 - 10");
+        for (int k =1;k<=10;k++){
+            Document testDoc = null;
+
+            int correctCount = 0;
+            int incorectCount = 0;
+
+            for (int y=0; y < testSet.length; y++){
+                testDoc = testSet[y];
+                // Remove test doc from set
+                testSet[y] = null;
+
+                String predClass = findWeightedNearestNeighbours(testDoc, testSet, k);
+                // System.out.println(testDoc);
+                // System.out.println(predClass);
+                // if (predClass == null){
+                //     nullC +=1;
+                // }
+               if (predClass.equals(testDoc.getLabel())){
+                    correctCount += 1;
+                } else {
+                    incorectCount += 1;
+               }
+               // Add document back into testSet
+               testSet[y] = testDoc;
+            }
+
+            double total = correctCount + incorectCount;
+            double perCorrect = correctCount / (double)total;
+
+            System.out.printf("Using %d neighbor(s) accuracy level is  %f %% \n", k, perCorrect);
+        }
     }
 }
