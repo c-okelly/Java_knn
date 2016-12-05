@@ -27,15 +27,20 @@ public class Knn{
 
     // Inner class to store measuremet of doc distances
     class MeasuredDoc implements Comparable<MeasuredDoc>{
-        Document doc;
-        Double distance;
+        Document doc = null;
+        Double distance = -1.0;
 
         MeasuredDoc(Document inputDoc,Double dis){
             doc = inputDoc;
             distance = dis;
         }
         public String toString(){
-            return "Document id " + doc.getID() + " distance " + distance;
+            if (doc != null){
+                return "Document id " + doc.getID() + " distance " + distance;
+            } else {
+                return "Document missing";
+            }
+
         }
         @Override
         public int compareTo(MeasuredDoc o){
@@ -157,7 +162,7 @@ public class Knn{
 
         // If one of docuemnts is null return 0
         if (doc1==null || doc2==null){
-            return -1;
+            return 0;
         }
         Hashtable<Integer, Integer> doc1Hashtable = doc1.getHashtable();
         Hashtable<Integer, Integer> doc2Hashtable = doc2.getHashtable();
@@ -287,6 +292,7 @@ public class Knn{
             nearestNeigh[i] = mes;
             i++;
         }
+
         // Create sorted array of documents that are nearest.
         Arrays.sort(nearestNeigh,Collections.reverseOrder());
         // System.out.println(Arrays.toString(nearestNeigh));
@@ -310,7 +316,7 @@ public class Knn{
                 // Remove test doc from set
                 testSet[y] = null;
 
-                String predClass = findWeightedNearestNeighbours(testDoc, testSet, k);
+                String predClass = findNearestNeighbours(testDoc, testSet, k);
                 // System.out.println(testDoc);
                 // System.out.println(predClass);
                 // if (predClass == null){

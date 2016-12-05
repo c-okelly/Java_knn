@@ -17,7 +17,7 @@ public class Document {
     int noColumns;
     String label = null;
     private Hashtable<Integer, Integer> freqTables = new Hashtable<Integer, Integer>();
-    double vectorNorm = 0;
+    public double vectorNorm = 0;
 
     // Constructor
     public Document(int documentNumber, int numberOfColumns){
