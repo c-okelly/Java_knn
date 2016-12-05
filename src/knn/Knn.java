@@ -22,7 +22,7 @@ public class Knn{
         ob.measureAccuracy(ob.documentsArray);
         // String nearest = ob.findNearestNeighbours(testDoc, ob.documentsArray, 10);
         // System.out.println("Final -" + nearest);
-        System.out.print((System.currentTimeMillis() - startTime) / 1000d + " s");
+        System.out.print("\n The program took "+(System.currentTimeMillis() - startTime) / 1000d + " second to run\n");
     }
 
     // Inner class to store measuremet of doc distances
